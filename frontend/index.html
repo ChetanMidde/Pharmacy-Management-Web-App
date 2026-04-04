@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaSync | Intelligent Pharmacy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ionicons for beautiful simple icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Notification Toast -->
+    <div id="toast-container"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen full-center bg-mesh">
+        <div class="glass-card login-box fade-in-up">
+            <div class="brand">
+                <ion-icon name="medkit"></ion-icon>
+                <h1>PharmaSync</h1>
+            </div>
+            <p class="subtitle">Secure Pharmacy Management</p>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary primary-glow w-100">
+                    Sign In
+                </button>
+            </form>
+            <div class="demo-info">
+                <small>Demo Account: <strong>admin</strong> / <strong>admin123</strong></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Dashboard -->
+    <div id="app-screen" class="screen hidden app-layout">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar glass-panel">
+            <div class="brand sidebar-brand">
+                <ion-icon name="medkit"></ion-icon>
+                <span class="brand-text">PharmaSync</span>
+            </div>
+            
+            <div class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard-tab">
+                    <ion-icon name="grid-outline"></ion-icon>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="pos-tab">
+                    <ion-icon name="cart-outline"></ion-icon>
+                    <span>Point of Sale</span>
+                </button>
+                <button class="nav-item" data-tab="inventory-tab">
+                    <ion-icon name="cube-outline"></ion-icon>
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-item" data-tab="ai-tab">
+                    <ion-icon name="analytics-outline"></ion-icon>
+                    <span>AI Predictor</span>
+                </button>
+                <button class="nav-item" data-tab="store-tab">
+                    <ion-icon name="fitness-outline"></ion-icon>
+                    <span>Health Store</span>
+                </button>
+            </div>
+
+            <div class="nav-bottom">
+                <div class="user-info">
+                    <div class="avatar"><ion-icon name="person"></ion-icon></div>
+                    <div class="info">
+                        <strong id="user-name-display">Admin</strong>
+                        <span id="user-role-display">Role</span>
+                    </div>
+                </div>
+                <button id="logout-btn" class="nav-item logout-btn">
+                    <ion-icon name="log-out-outline"></ion-icon>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Dashboard Tab -->
+            <section id="dashboard-tab" class="tab-content active fade-in">
+                <header class="section-header">
+                    <h2>Overview dashboard</h2>
+                    <p>Welcome back! Here's what's happening today.</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon bg-blue"><ion-icon name="cash-outline"></ion-icon></div>
+                        <div class="stat-info">
+                            <h3>Total Sales</h3>
+                            <h2 id="stat-sales">--</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon bg-orange"><ion-icon name="warning-outline"></ion-icon></div>
+                        <div class="stat-info">
+                            <h3>Low Stock Alerts</h3>
+                            <h2 id="stat-low-stock">--</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon bg-purple"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
+                        <div class="stat-info">
+                            <h3>Controlled Drugs Dispensed</h3>
+                            <h2 id="stat-controlled">--</h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-alerts-container glass-card mt-2">
+                    <h3>System Messages</h3>
+                    <div class="alerts-list">
+                        <div class="alert-item info">System running smoothly. AI Prediction Engine online.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- POS Tab -->
+            <section id="pos-tab" class="tab-content hidden fade-in">
+                <header class="section-header">
+                    <h2>Point of Sale</h2>
+                    <p>Process a new transaction</p>
+                </header>
+                
+                <div class="pos-layout">
+                    <!-- Med Selector -->
+                    <div class="pos-products glass-card">
+                        <h3>Select Medicine</h3>
+                        <div class="search-bar">
+                            <ion-icon name="search-outline"></ion-icon>
+                            <input type="text" id="pos-search" placeholder="Search medicines...">
+                        </div>
+                        <div class="product-grid" id="pos-product-grid">
+                            <!-- Populated js -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cart -->
+                    <div class="pos-cart glass-card">
+                        <h3>Current Cart</h3>
+                        <div class="cart-items" id="cart-items">
+                            <p class="empty-cart-msg">Cart is empty</p>
+                        </div>
+                        
+                        <div class="cart-summary">
+                            <div class="summary-line">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal">₹0.00</span>
+                            </div>
+                            <div class="summary-line total-line">
+                                <span>Total</span>
+                                <span id="cart-total">₹0.00</span>
+                            </div>
+                            <button id="checkout-btn" class="btn btn-primary primary-glow w-100 mt-1" disabled>
+                                Process Transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Tab -->
+            <section id="inventory-tab" class="tab-content hidden fade-in">
+                <header class="section-header flex-between">
+                    <div>
+                        <h2>Inventory Management</h2>
+                        <p>Track stock and manage medicines</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-add-medicine">
+                        <ion-icon name="add-outline"></ion-icon> Add Drug
+                    </button>
+                </header>
+                
+                <div class="table-container glass-card mt-2">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Controlled</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">
+                            <!-- JS populates -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AI Predictor Tab -->
+            <section id="ai-tab" class="tab-content hidden fade-in">
+                <header class="section-header flex-between">
+                    <div>
+                        <h2>AI Demand Forecasting</h2>
+                        <p>Machine learning powered inventory optimization</p>
+                    </div>
+                    <button class="btn btn-purple primary-glow" id="btn-run-ai">
+                        <ion-icon name="color-wand-outline"></ion-icon> Run Analysis
+                    </button>
+                </header>
+                
+                <div class="ai-results grid-2 mt-2" id="ai-results-grid">
+                    <!-- Cards injected by JS -->
+                    <div class="glass-card empty-state full-center text-center grid-span-2">
+                        <ion-icon name="hardware-chip-outline" style="font-size: 4rem; color: var(--text-muted);"></ion-icon>
+                        <p class="mt-1">Click "Run Analysis" to generate demand predictions.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Store Tab (Shop by Condition, Buy Now, Wishlist) -->
+            <section id="store-tab" class="tab-content hidden fade-in">
+                <header class="section-header">
+                    <h2>Health Solutions Store</h2>
+                    <p>Shop medicines directly by health conditions or target illnesses</p>
+                </header>
+                
+                <div class="pos-layout">
+                    <!-- Condition Filter & Products -->
+                    <div class="pos-products glass-card" style="display:flex; flex-direction:column;">
+                        <h3 style="margin-bottom: 0.8rem;">Filter by Condition</h3>
+                        <div id="conditions-filter-container" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom: 1.5rem;">
+                            <!-- populated by js -->
+                        </div>
+                        
+                        <h3 id="store-current-condition">All Products</h3>
+                        <div class="product-grid mt-1" id="store-product-grid">
+                            <!-- Populated js -->
+                        </div>
+                    </div>
+                    
+                    <!-- Store Side-Panel (Cart & Wishlist) -->
+                    <div style="display:flex; flex-direction:column; gap:1.5rem; height:100%;">
+                        
+                        <!-- Mini Checkout / Buy Now -->
+                        <div class="pos-cart glass-card" style="flex: 1;">
+                            <h3>Your Cart</h3>
+                            <div class="cart-items" id="store-cart-items">
+                                <p class="empty-cart-msg">Cart is empty</p>
+                            </div>
+                            
+                            <div class="cart-summary mt-1">
+                                <div class="summary-line total-line">
+                                    <span>Total</span>
+                                    <span id="store-cart-total">₹0.00</span>
+                                </div>
+                                <button id="store-buy-now-btn" class="btn btn-primary primary-glow w-100 mt-1" disabled>
+                                    <ion-icon name="card-outline"></ion-icon> Buy Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Wishlist -->
+                        <div class="glass-card" style="flex: 1; display:flex; flex-direction:column;">
+                            <h3>Wishlist <ion-icon name="heart" style="color:var(--danger)"></ion-icon></h3>
+                            <div class="cart-items mt-1" id="wishlist-container">
+                                <p class="empty-cart-msg">No items in wishlist</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+            
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Prescription Modal -->
+    <div id="rx-modal" class="modal-overlay hidden">
+        <div class="modal glass-card fade-in-up">
+            <h3>Prescription Required</h3>
+            <p><strong><span id="rx-med-name">Medicine</span></strong> is a controlled substance. Please log the prescription details.</p>
+            <div class="input-group mt-1">
+                <input type="text" id="rx-details" placeholder="Dr. Name / Rx ID" required>
+            </div>
+            <div class="modal-actions mt-2">
+                <button class="btn btn-secondary" id="btn-cancel-rx">Cancel</button>
+                <button class="btn btn-primary" id="btn-submit-rx">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Medicine Modal -->
+    <div id="add-med-modal" class="modal-overlay hidden">
+        <div class="modal glass-card fade-in-up">
+            <h3>Add New Medicine</h3>
+            <form id="add-med-form" class="mt-1">
+                <div class="input-group">
+                    <input type="text" id="med-name" placeholder="Medicine Name" required>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="med-desc" placeholder="Description" required>
+                </div>
+                <div class="grid-2-col gap-1">
+                    <div class="input-group">
+                        <input type="number" id="med-stock" placeholder="Initial Stock" required min="0">
+                    </div>
+                    <div class="input-group">
+                        <input type="number" step="0.01" id="med-price" placeholder="Price (₹)" required min="0">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label style="color:var(--text-muted); font-size: 0.8rem; margin-bottom: 0.2rem; display:block;">Expiry Date</label>
+                    <input type="date" id="med-expiry" required>
+                </div>
+                <div class="checkbox-group mt-1">
+                    <input type="checkbox" id="med-controlled">
+                    <label for="med-controlled">Is Controlled Substance?</label>
+                </div>
+                <div class="modal-actions mt-2">
+                    <button type="button" class="btn btn-secondary" id="btn-close-add-med">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Medicine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

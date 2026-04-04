@@ -1,0 +1,70 @@
+# PharmaSync - Intelligent Pharmacy Management System
+## Documentation
+
+### 1. Architecture
+PharmaSync is built on a modern, decoupled client-server architecture:
+- **Backend**: Python with FastAPI. It handles routing, authentication, business logic, and database operations. FastAPI ensures asynchronous processing and self-documenting APIs (Swagger UI).
+- **Database**: PostgreSQL (via SQLAlchemy ORM). Used for robust, relational data storage. The application is designed to support PostgreSQL, which scales perfectly in a production environment.
+- **Frontend**: Vanilla HTML5, CSS3, and JavaScript. It functions as a Single Page Application (SPA), providing a highly dynamic, low-latency user experience.
+- **Security**: JWT (JSON Web Tokens) are used for role-based authentication and secure session management.
+
+### 2. Features Designed & Roles
+**Roles**: 
+- Admin (Full access)
+- Manager (Inventory and Reports)
+- Pharmacist (Sales, Inventory, Prescriptions)
+- Staff (Sales Only)
+
+**Core Features**:
+- *Login System*: Role-based access control protecting sensitive endpoints.
+- *Sales & POS System*: Sell medicines, attach prescriptions when selling controlled substances, and calculate totals.
+- *Inventory System*: Track stock levels, pricing, add new medicines, and automatically flag items as low-stock (< 10 units).
+- *Controlled Drug Tracking*: The system strictly gates controlled medications (like schedule II drugs), enforcing prescription attachment for accountability.
+- *Dashboard Analytics*: Track total sales, low stock alerts, and volumes of restricted drugs processed.
+- *AI Capabilities*: Real-time demand forecasting.
+
+### 3. Database Schema
+Models are mapping strictly to Postgres tables:
+
+- **Users (`users`)**
+  - `id` (PK)
+  - `username` (String, Unique)
+  - `hashed_password` (String)
+  - `role` (Enum: admin, manager, pharmacist, staff)
+
+- **Medicines (`medicines`)**
+  - `id` (PK)
+  - `name` (String)
+  - `description` (String)
+  - `is_controlled` (Boolean)
+  - `stock` (Integer)
+  - `price` (Float)
+  - `expiry_date` (Date)
+
+- **Sales (`sales`)**
+  - `id` (PK)
+  - `user_id` (FK -> users.id)
+  - `total_amount` (Float)
+  - `date` (DateTime)
+
+- **Sale Items (`sale_items`)**
+  - `id` (PK)
+  - `sale_id` (FK -> sales.id)
+  - `medicine_id` (FK -> medicines.id)
+  - `quantity` (Integer)
+  - `price_at_time` (Float)
+  - `prescription_info` (String, nullable)
+
+### 4. API Endpoints
+- `POST /token` - Authenticates user and returns JWT token
+- `GET /api/medicines` - Retrieves all cataloged medicines
+- `POST /api/medicines` - Add new medicines (Admin/Manager/Pharmacist)
+- `GET /api/inventory/low-stock` - Retrieves medicines with stock < 10
+- `POST /api/sales` - Processes a complex transaction, deducts stock, checks constraints
+- `GET /api/dashboard/stats` - Fetches high-level metrics for the dashboard
+- `GET /api/ai/predict-demand` - Returns forecasted stocking estimates
+
+### 5. AI Logic: Demand Prediction
+The AI Feature implemented is a statistical demand prediction engine.
+In a real-world scenario, this would utilize a trained ML model (like XGBoost or Prophet) using historical sales velocity data. 
+In this prototype implementation, the backend exposes the `/api/ai/predict-demand` route. It simulates algorithmic learning by generating a contextual calculation based on current stock weights, simulating an inventory padding algorithm. This predicts exactly how many units to re-order for the next month to prevent out-of-stock events, saving overhead and reducing stockouts.
