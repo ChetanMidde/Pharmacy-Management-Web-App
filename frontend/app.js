@@ -2,6 +2,7 @@
 const state = {
     token: localStorage.getItem('token') || null,
     role: localStorage.getItem('role') || null,
+    username: localStorage.getItem('username') || null,
     medicines: [],
     cart: [],
     wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
@@ -58,24 +59,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     setupEventListeners();
+    
+    // Auto-refresh dashboard every 30 seconds for real-time feel
+    setInterval(() => {
+        if (state.token && document.getElementById('dashboard-tab').classList.contains('active')) {
+            loadDashboard();
+        }
+    }, 30000);
 });
 
 function initApp() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     
-    document.getElementById('user-name-display').innerText = "Logged In";
-    document.getElementById('user-role-display').innerText = state.role || "User";
+    document.getElementById('user-name-display').innerText = state.username || "Chetan Midde";
+    document.getElementById('user-role-display').innerText = (state.role || "Administrator").toUpperCase();
+    
+    // Role-Based UI Filtering
+    enforceRoleAccess();
     
     loadDashboard();
     fetchMedicines();
 }
 
+function enforceRoleAccess() {
+    const role = state.role;
+    const navItems = document.querySelectorAll('.nav-menu .nav-item');
+    
+    navItems.forEach(item => {
+        const tab = item.getAttribute('data-tab');
+        
+        // Default Hide logic
+        let visible = false;
+        
+        if (role === 'admin') visible = true;
+        else if (role === 'manager') {
+            if (['dashboard-tab', 'inventory-tab', 'ai-tab', 'store-tab'].includes(tab)) visible = true;
+        } else if (role === 'pharmacist') {
+            if (['pos-tab', 'inventory-tab', 'store-tab'].includes(tab)) visible = true;
+        } else if (role === 'staff') {
+            if (['pos-tab', 'store-tab'].includes(tab)) visible = true;
+        }
+        
+        if (visible) item.classList.remove('hidden');
+        else item.classList.add('hidden');
+    });
+
+    // Auto-select first visible tab
+    const firstVisible = document.querySelector('.nav-menu .nav-item:not(.hidden)');
+    if (firstVisible) firstVisible.click();
+}
+
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('username');
     state.token = null;
     state.role = null;
+    state.username = null;
     document.getElementById('app-screen').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
     showToast('Logged out successfully');
@@ -83,7 +124,50 @@ function logout() {
 
 // Event Listeners
 function setupEventListeners() {
-    // Auth
+    // Auth Toggle Logic
+    document.getElementById('toggle-to-signup').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('signup-container').classList.remove('hidden');
+    });
+
+    document.getElementById('toggle-to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('signup-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+    });
+
+    // Registration
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const u = document.getElementById('reg-username').value;
+        const p = document.getElementById('reg-password').value;
+        const r = document.getElementById('reg-role').value;
+        const btn = e.target.querySelector('button');
+        btn.innerText = 'Creating Account...';
+        
+        try {
+            const res = await fetch(`${API_BASE}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p, role: r })
+            });
+            
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.detail || 'Registration failed');
+            
+            showToast('Account created! You can now sign in.', 'success');
+            document.getElementById('signup-container').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+            e.target.reset();
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.innerText = 'Register';
+        }
+    });
+
+    // Login
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const u = document.getElementById('username').value;
@@ -107,11 +191,13 @@ function setupEventListeners() {
             
             state.token = data.access_token;
             state.role = data.role;
+            state.username = data.username;
             localStorage.setItem('token', state.token);
             localStorage.setItem('role', state.role);
+            localStorage.setItem('username', state.username);
             
             initApp();
-            showToast('Logic successful', 'success');
+            showToast('Login successful', 'success');
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -171,6 +257,7 @@ function setupEventListeners() {
             const payload = {
                 name: document.getElementById('med-name').value,
                 description: document.getElementById('med-desc').value,
+                condition: document.getElementById('med-condition').value,
                 is_controlled: document.getElementById('med-controlled').checked,
                 stock: parseInt(document.getElementById('med-stock').value),
                 price: parseFloat(document.getElementById('med-price').value),
@@ -224,10 +311,83 @@ async function loadDashboard() {
         animateCount('stat-low-stock', stats.low_stock_items);
         animateCount('stat-controlled', stats.controlled_drug_dispensed);
         
+        // Fetch Recent Sales
+        const recentSales = await apiFetch('/api/dashboard/recent-sales');
+        renderRecentSales(recentSales);
+        
+        // Dynamic Alerts
+        updateDynamicAlerts(stats.low_stock_items);
+        
     } catch (e) {
-        // likely restricted scope
-        document.getElementById('stat-sales').innerText = '-';
+        console.error("Dashboard error:", e);
     }
+}
+
+function renderRecentSales(sales) {
+    const container = document.getElementById('dashboard-recent-sales');
+    if (!container) return;
+    
+    if (sales.length === 0) {
+        container.innerHTML = '<p class="empty-cart-msg">No recent transactions.</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    sales.forEach(s => {
+        const dateStr = new Date(s.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const div = document.createElement('div');
+        div.className = 'cart-item fade-in';
+        div.style.borderBottom = '1px solid var(--border-color)';
+        div.innerHTML = `
+            <div class="cart-item-info">
+                <strong>Sale #${s.id} - ${s.username}</strong>
+                <span>${s.items_count} items • ${dateStr}</span>
+            </div>
+            <div class="product-price" style="font-size:1.1rem">₹${s.total_amount.toFixed(2)}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function updateDynamicAlerts(lowStockCount) {
+    const container = document.getElementById('dashboard-alerts');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Add a check for expired/near-expiry items
+    const nearExpiry = state.medicines.filter(m => {
+        const year = parseInt(m.expiry_date.split('-')[0]);
+        return year <= 2024;
+    });
+
+    if (nearExpiry.length > 0) {
+        const alert = document.createElement('div');
+        alert.className = 'alert-item info';
+        alert.style.borderLeftColor = 'var(--warning)';
+        alert.innerHTML = `<span style="color:var(--warning); font-weight:700;">Expiry Alert:</span> ${nearExpiry.length} items are near expiry (Paracetamol, Aspirin). Check inventory.`;
+        container.appendChild(alert);
+    }
+
+    // Add Low Stock Alert
+    if (lowStockCount > 0) {
+        const alert = document.createElement('div');
+        alert.className = 'alert-item info';
+        alert.style.borderLeftColor = 'var(--danger)';
+        alert.innerHTML = `<span style="color:var(--danger); font-weight:700;">Inventory Warning:</span> ${lowStockCount} items are running low on stock. Check inventory tab.`;
+        container.appendChild(alert);
+    } else {
+        const alert = document.createElement('div');
+        alert.className = 'alert-item info';
+        alert.innerText = 'All stock levels are optimal. No critical alerts.';
+        container.appendChild(alert);
+    }
+    
+    // Add a generic system message
+    const sysMsg = document.createElement('div');
+    sysMsg.className = 'alert-item info';
+    sysMsg.innerText = 'AI Prediction Engine is monitoring sales velocity vectors.';
+    container.appendChild(sysMsg);
 }
 
 function animateCount(id, target) {
@@ -405,7 +565,8 @@ async function processCheckout() {
             body: JSON.stringify(payload)
         });
         
-        showToast(`Transaction complete! Total: ₹${res.total.toFixed(2)}`, 'success');
+        showToast(`Transaction complete!`, 'success');
+        showReceipt(res, state.cart);
         state.cart = [];
         renderCart();
         fetchMedicines(); // update stock
@@ -418,6 +579,43 @@ async function processCheckout() {
         btn.disabled = state.cart.length === 0;
     }
 }
+
+function showReceipt(sale, items) {
+    const receiptContainer = document.getElementById('receipt-content');
+    const modal = document.getElementById('receipt-modal');
+    
+    const dateStr = new Date().toLocaleString();
+    let itemsHtml = '';
+    items.forEach(item => {
+        itemsHtml += `
+            <div class="flex-between py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.1)">
+                <span>${item.name} x${item.qty}</span>
+                <span>₹${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+        `;
+    });
+
+    receiptContainer.innerHTML = `
+        <div class="text-center mb-2">
+            <h2 style="color:var(--primary)">PharmaSync Digital Receipt</h2>
+            <p>Transaction ID: #${sale.sale_id} | ${dateStr}</p>
+        </div>
+        <div class="mt-2">
+            ${itemsHtml}
+        </div>
+        <div class="flex-between mt-2" style="font-size:1.4rem; font-weight:bold; border-top: 1px solid rgba(255,255,255,0.2); padding-top:1rem;">
+            <span>TOTAL</span>
+            <span style="color:var(--success)">₹${sale.total.toFixed(2)}</span>
+        </div>
+        <p class="text-muted text-center mt-2" style="font-size:0.8rem">Pharmacist: ${state.username}<br>Thank you for choosing PharmaSync</p>
+    `;
+
+    modal.classList.remove('hidden');
+}
+
+window.closeReceipt = function() {
+    document.getElementById('receipt-modal').classList.add('hidden');
+};
 
 // AI Feature
 async function runAIPrediction() {

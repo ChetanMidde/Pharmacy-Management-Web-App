@@ -15,30 +15,72 @@
     <!-- Notification Toast -->
     <div id="toast-container"></div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="screen full-center bg-mesh">
-        <div class="glass-card login-box fade-in-up">
-            <div class="brand">
+    <!-- Auth Screen -->
+    <div id="login-screen" class="screen bg-app auth-split-layout">
+        <div class="auth-visual bg-mesh">
+            <div class="auth-brand fade-in">
                 <ion-icon name="medkit"></ion-icon>
                 <h1>PharmaSync</h1>
+                <p>Advanced Pharmacy Analytics & Management</p>
+                <div class="brand-stats mt-2">
+                    <div class="mini-stat"><ion-icon name="trending-up-outline"></ion-icon> Real-time Inventory</div>
+                    <div class="mini-stat"><ion-icon name="shield-checkmark-outline"></ion-icon> Secure Rx Verification</div>
+                    <div class="mini-stat"><ion-icon name="flash-outline"></ion-icon> AI Demand Analysis</div>
+                </div>
             </div>
-            <p class="subtitle">Secure Pharmacy Management</p>
-            
-            <form id="login-form">
-                <div class="input-group">
-                    <ion-icon name="person-outline"></ion-icon>
-                    <input type="text" id="username" placeholder="Username" required>
+        </div>
+        
+        <div class="auth-panel full-center">
+            <!-- Login Container -->
+            <div id="login-container" class="auth-form-box fade-in-up">
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Please sign in to your dashboard</p>
+                <form id="login-form">
+                    <div class="input-group">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <input type="text" id="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-group">
+                        <ion-icon name="lock-closed-outline"></ion-icon>
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary primary-glow w-100">Sign In</button>
+                </form>
+                <div class="auth-footer text-center mt-2">
+                    <p>Don't have an account? <a href="#" id="toggle-to-signup">Create one</a></p>
+                    <div class="demo-info">
+                        <small>Admin: <strong>admin</strong> / <strong>admin123</strong></small>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <ion-icon name="lock-closed-outline"></ion-icon>
-                    <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <!-- Signup Container (Hidden Initially) -->
+            <div id="signup-container" class="auth-form-box fade-in-up hidden">
+                <h2>Create Account</h2>
+                <p class="subtitle">Join the PharmaSync network</p>
+                <form id="signup-form">
+                    <div class="input-group">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <input type="text" id="reg-username" placeholder="Choose Username" required>
+                    </div>
+                    <div class="input-group">
+                        <ion-icon name="lock-closed-outline"></ion-icon>
+                        <input type="password" id="reg-password" placeholder="Set Password" required>
+                    </div>
+                    <div class="input-group" style="padding-right: 0.5rem;">
+                        <ion-icon name="briefcase-outline"></ion-icon>
+                        <select id="reg-role" style="background:transparent; color:white; width:100%; border:none; outline:none;">
+                            <option value="staff" style="background:var(--bg-app)">Staff</option>
+                            <option value="pharmacist" style="background:var(--bg-app)">Pharmacist</option>
+                            <option value="manager" style="background:var(--bg-app)">Manager</option>
+                            <option value="admin" style="background:var(--bg-app)">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-purple primary-glow w-100">Register</button>
+                </form>
+                <div class="auth-footer text-center mt-2">
+                    <p>Already have an account? <a href="#" id="toggle-to-login">Sign in</a></p>
                 </div>
-                <button type="submit" class="btn btn-primary primary-glow w-100">
-                    Sign In
-                </button>
-            </form>
-            <div class="demo-info">
-                <small>Demo Account: <strong>admin</strong> / <strong>admin123</strong></small>
             </div>
         </div>
     </div>
@@ -80,8 +122,8 @@
                 <div class="user-info">
                     <div class="avatar"><ion-icon name="person"></ion-icon></div>
                     <div class="info">
-                        <strong id="user-name-display">Admin</strong>
-                        <span id="user-role-display">Role</span>
+                        <strong id="user-name-display">Chetan Midde</strong>
+                        <span id="user-role-display">Administrator</span>
                     </div>
                 </div>
                 <button id="logout-btn" class="nav-item logout-btn">
@@ -125,10 +167,19 @@
                     </div>
                 </div>
                 
-                <div class="recent-alerts-container glass-card mt-2">
-                    <h3>System Messages</h3>
-                    <div class="alerts-list">
-                        <div class="alert-item info">System running smoothly. AI Prediction Engine online.</div>
+                <div class="dashboard-secondary-grid grid-2 mt-2">
+                    <div class="recent-alerts-container glass-card">
+                        <h3>Inventory & System Alerts</h3>
+                        <div class="alerts-list" id="dashboard-alerts">
+                            <div class="alert-item info">Analyzing inventory levels...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-sales-container glass-card">
+                        <h3>Recent Transactions</h3>
+                        <div class="sales-list" id="dashboard-recent-sales">
+                            <p class="empty-cart-msg">No recent sales found.</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -312,6 +363,9 @@
                 <div class="input-group">
                     <input type="text" id="med-desc" placeholder="Description" required>
                 </div>
+                <div class="input-group">
+                    <input type="text" id="med-condition" placeholder="Health Condition (e.g. Cough, Fever)" required>
+                </div>
                 <div class="grid-2-col gap-1">
                     <div class="input-group">
                         <input type="number" id="med-stock" placeholder="Initial Stock" required min="0">
@@ -337,5 +391,12 @@
     </div>
 
     <script src="app.js"></script>
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="modal-overlay hidden full-center" style="z-index: 2000;">
+        <div class="glass-card" style="width: 100%; max-width: 450px; background: rgba(15, 23, 42, 0.95);">
+            <div id="receipt-content"></div>
+            <button class="btn btn-primary w-100 mt-2" onclick="closeReceipt()">Close Receipt</button>
+        </div>
+    </div>
 </body>
 </html>

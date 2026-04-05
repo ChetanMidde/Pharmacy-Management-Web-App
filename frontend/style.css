@@ -1,20 +1,23 @@
 :root {
-    --bg-app: #0f1115;
-    --bg-card: rgba(22, 25, 33, 0.6);
-    --border-color: rgba(255, 255, 255, 0.08);
+    --bg-app: #08090d;
+    --bg-card: rgba(22, 25, 33, 0.45);
+    --border-color: rgba(255, 255, 255, 0.1);
     --text-main: #f0f2f5;
-    --text-muted: #9ba1a6;
+    --text-muted: #94a3b8;
 
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --secondary: #272a35;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --secondary: #1e293b;
     
     --success: #10b981;
     --warning: #f59e0b;
-    --danger: #ef4444;
+    --danger: #f43f5e;
     --purple: #8b5cf6;
 
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-grad: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    --neon-blue: rgba(79, 70, 229, 0.5);
+    --neon-purple: rgba(139, 92, 246, 0.5);
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -26,8 +29,12 @@
 
 body {
     background-color: var(--bg-app);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
     color: var(--text-main);
     overflow: hidden;
+    height: 100vh;
 }
 
 /* Typography */
@@ -54,13 +61,14 @@ button, input { outline: none; border: none; font-family: inherit; }
 
 /* Glassmorphism */
 .glass-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--glass-grad);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.82);
+    transition: var(--transition);
 }
 
 .glass-panel {
@@ -71,9 +79,14 @@ button, input { outline: none; border: none; font-family: inherit; }
 
 /* Backgrounds */
 .bg-mesh {
-    background: radial-gradient(circle at top left, #1a233b, transparent 40%),
-                radial-gradient(circle at bottom right, #24143a, transparent 40%);
-    background-color: #0b0c10;
+    background: url('login-bg.png') no-repeat center center / cover;
+    position: relative;
+}
+.bg-mesh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(8, 9, 13, 0.2), rgba(8, 9, 13, 0.9));
 }
 
 /* Animations */
@@ -124,13 +137,32 @@ button, input { outline: none; border: none; font-family: inherit; }
 .primary-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
 .btn-purple.primary-glow { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
 
-/* Login */
-.login-box { width: 100%; max-width: 400px; padding: 2.5rem; }
-.login-box .brand { display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-bottom: 0.5rem; }
-.login-box .brand ion-icon { font-size: 2.5rem; color: var(--primary); }
-.login-box .brand h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
-.login-box .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 2rem; }
-.demo-info { margin-top: 1.5rem; text-align: center; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 8px;}
+/* Authentication Split Layout */
+.auth-split-layout { display: grid; grid-template-columns: 1.2fr 1fr; background: var(--bg-app); min-height: 100vh; }
+.auth-visual { 
+    padding: 4rem; display: flex; flex-direction: column; justify-content: center; 
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+.auth-visual::after { background: radial-gradient(circle at center, rgba(8, 9, 13, 0.4), rgba(8, 9, 13, 0.95)); }
+.auth-brand { z-index: 10; max-width: 500px; }
+.auth-brand ion-icon { font-size: 5rem; color: var(--primary); filter: drop-shadow(0 0 20px var(--neon-blue)); margin-bottom: 1.5rem; }
+.auth-brand h1 { font-size: 4.5rem; letter-spacing: -2px; margin-bottom: 1rem; }
+.auth-brand p { font-size: 1.4rem; color: var(--text-muted); line-height: 1.4; }
+
+.brand-stats { display: flex; flex-direction: column; gap: 1rem; margin-top: 3rem; }
+.mini-stat { display: flex; align-items: center; gap: 1rem; font-size: 1.1rem; color: var(--text-main); font-weight: 500; }
+.mini-stat ion-icon { font-size: 1.5rem; color: var(--success); filter: none; margin:0; }
+
+.auth-panel { padding: 4rem; background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05), transparent); }
+.auth-form-box { width: 100%; max-width: 420px; transition: var(--transition); }
+.auth-form-box h2 { font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: -1px; }
+.auth-form-box .subtitle { margin-bottom: 2.5rem; color: var(--text-muted); }
+
+.auth-footer { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
+.auth-footer a { font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+/* Login Box Fixes (from previous design) */
+.demo-info { margin-top: 2rem; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
 
 /* Sidebar */
 .sidebar { width: 280px; height: 100vh; display: flex; flex-direction: column; padding: 1.5rem; }

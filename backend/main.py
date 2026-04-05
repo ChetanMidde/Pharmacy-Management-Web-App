@@ -69,41 +69,78 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 # Seed Database with a default user for testing
-from sqlalchemy.orm.session import Session
 def seed_db(db: Session):
     admin = db.query(models.User).filter(models.User.username == "admin").first()
-    if not admin:
-        new_admin = models.User(
-            username="admin",
-            hashed_password=get_password_hash("admin123"),
-            role=models.RoleEnum.admin
-        )
-        db.add(new_admin)
+    med_count = db.query(models.Medicine).count()
+    
+    if not admin or med_count < 10:
+        if not admin:
+            new_admin = models.User(
+                username="admin",
+                hashed_password=get_password_hash("admin123"),
+                role=models.RoleEnum.admin
+            )
+            db.add(new_admin)
         
-        # Seed an expanded catalog of medicines for testing
-        meds = [
-            models.Medicine(name="Paracetamol 500mg", description="Pain reliever", condition="Fever & Pain", is_controlled=False, stock=150, price=15.00, expiry_date=date(2028,1,1)),
-            models.Medicine(name="Amoxicillin 250mg", description="Antibiotic", condition="Infection", is_controlled=True, stock=8, price=45.00, expiry_date=date(2025,5,5)),
-            models.Medicine(name="Ibuprofen 400mg", description="Anti-inflammatory", condition="Fever & Pain", is_controlled=False, stock=50, price=20.00, expiry_date=date(2026,10,1)),
-            models.Medicine(name="Cetirizine 10mg", description="Antihistamine / Allergy", condition="Allergy", is_controlled=False, stock=200, price=10.00, expiry_date=date(2027,3,15)),
-            
-            # --- Added user-requested direct conditions ---
-            models.Medicine(name="DayQuil Cold & Flu", description="Multi-symptom relief", condition="Cold", is_controlled=False, stock=40, price=25.00, expiry_date=date(2026,12,1)),
-            models.Medicine(name="NyQuil Severe", description="Nighttime cold relief", condition="Cold", is_controlled=False, stock=35, price=26.50, expiry_date=date(2027,2,10)),
-            models.Medicine(name="Robitussin DM", description="Cough suppressant", condition="Cough", is_controlled=False, stock=60, price=18.00, expiry_date=date(2026,5,20)),
-            models.Medicine(name="Benadryl 25mg", description="Allergy & Cold relief", condition="Cold", is_controlled=False, stock=90, price=12.00, expiry_date=date(2028,8,15)),
-            models.Medicine(name="Dolo 650", description="Fast Headache Relief", condition="Headache", is_controlled=False, stock=300, price=2.50, expiry_date=date(2029,1,1)),
-            models.Medicine(name="Aspirin 81mg", description="Mild pain / Headache", condition="Headache", is_controlled=False, stock=110, price=8.00, expiry_date=date(2027,10,5)),
-            models.Medicine(name="Tums Ultra Strength", description="Stomach ache relief", condition="Stomach Ache", is_controlled=False, stock=50, price=6.50, expiry_date=date(2028,4,12)),
-            # ----------------------------------------------
-            
-            models.Medicine(name="Azithromycin 500mg", description="Broad-spectrum Antibiotic", condition="Infection", is_controlled=True, stock=15, price=65.00, expiry_date=date(2026,8,22)),
-            models.Medicine(name="Metformin 500mg", description="Type 2 Diabetes", condition="Diabetes", is_controlled=False, stock=120, price=25.00, expiry_date=date(2028,6,30)),
-            models.Medicine(name="Omeprazole 20mg", description="Antacid / Acid Reflux", condition="Digestive Health", is_controlled=False, stock=85, price=18.50, expiry_date=date(2026,11,1)),
-            models.Medicine(name="Atorvastatin 20mg", description="Cholesterol management", condition="Heart Health", is_controlled=False, stock=60, price=30.00, expiry_date=date(2027,1,10)),
-            models.Medicine(name="Diazepam 5mg", description="Anxiety medication", condition="Mental Health", is_controlled=True, stock=4, price=55.00, expiry_date=date(2025,9,14)),
-            models.Medicine(name="Amlodipine 5mg", description="High blood pressure", condition="Heart Health", is_controlled=False, stock=75, price=22.00, expiry_date=date(2028,12,31))
+        med_names = [
+            ("Paracetamol", "Pain & Fever", 5.00, False), ("Amoxicillin", "Infection", 45.00, True),
+            ("Ibuprofen", "Pain & Fever", 8.00, False), ("Cetirizine", "Allergy", 12.00, False),
+            ("Azithromycin", "Infection", 65.00, True), ("Metformin", "Diabetes", 25.00, False),
+            ("Omeprazole", "Digestive", 18.00, False), ("Atorvastatin", "Heart", 30.00, False),
+            ("Amlodipine", "Heart", 22.00, False), ("Diazepam", "Mental Health", 55.00, True),
+            ("Albuterol", "Respiratory", 35.00, False), ("Lisinopril", "Heart", 28.00, False),
+            ("Levothyroxine", "Thyroid", 15.00, False), ("Gabapentin", "Nerve Pain", 40.00, True),
+            ("Losartan", "Heart", 24.00, False), ("Simvastatin", "Heart", 20.00, False),
+            ("Pantoprazole", "Digestive", 22.00, False), ("Furosemide", "Heart", 12.00, False),
+            ("Montelukast", "Respiratory", 32.00, False), ("Rosuvastatin", "Heart", 38.00, False),
+            ("Escitalopram", "Mental Health", 45.00, False), ("Sertraline", "Mental Health", 42.00, False),
+            ("Alprazolam", "Mental Health", 60.00, True), ("Prednisone", "Immune System", 18.00, False),
+            ("Fluoxetine", "Mental Health", 35.00, False), ("Tamsulosin", "Urological", 50.00, False),
+            ("Carvedilol", "Heart", 26.00, False), ("Meloxicam", "Pain & Fever", 15.00, False),
+            ("Tramadol", "Pain & Fever", 55.00, True), ("Clopidogrel", "Heart", 48.00, False),
+            ("Spironolactone", "Heart", 22.00, False), ("Warfarin", "Heart", 18.00, True),
+            ("Glipizide", "Diabetes", 20.00, False), ("Duloxetine", "Mental Health", 52.00, False),
+            ("Ranitidine", "Digestive", 15.00, False), ("Zolpidem", "Sleep Aid", 45.00, True),
+            ("Venlafaxine", "Mental Health", 48.00, False), ("Lorazepam", "Mental Health", 58.00, True),
+            ("Allopurinol", "Gout", 14.00, False), ("Oxycodone", "Pain & Fever", 85.00, True),
+            ("Hydrochlorothiazide", "Heart", 10.00, False), ("Citalopram", "Mental Health", 38.00, False),
+            ("Aspirin", "Heart", 5.00, False), ("Vitamin D3", "Supplements", 12.00, False),
+            ("Biotin", "Supplements", 15.00, False), ("Zinc", "Supplements", 8.00, False),
+            ("Fish Oil", "Supplements", 22.00, False), ("Calcium", "Supplements", 10.00, False),
+            ("Multivitamin", "Supplements", 25.00, False), ("Magnesium", "Supplements", 14.00, False),
+            ("Probiotics", "Supplements", 30.00, False), ("Iron", "Supplements", 12.00, False),
+            ("Vitamin C", "Supplements", 10.00, False), ("Melatonin", "Sleep Aid", 18.00, False),
+            ("Dolo 650", "Pain & Fever", 2.00, False), ("Saridon", "Headache", 1.50, False),
+            ("Combiflam", "Pain & Fever", 3.00, False), ("Crocin", "Pain & Fever", 2.50, False),
+            ("Digene", "Digestive", 5.00, False), ("Gelusil", "Digestive", 6.00, False),
+            ("Vicks Vaporub", "Cold", 12.00, False), ("Strepsils", "Cough", 4.00, False),
+            ("Benadryl", "Cough", 15.00, False), ("Allegra", "Allergy", 25.00, False),
+            ("Avil", "Allergy", 8.00, False), ("Betadine", "First Aid", 20.00, False),
+            ("Dettol", "First Aid", 35.00, False), ("Savlon", "First Aid", 30.00, False),
+            ("Band-Aid", "First Aid", 5.00, False), ("Crepe Bandage", "First Aid", 45.00, False),
+            ("Cotton Wool", "First Aid", 25.00, False), ("Hand Sanitizer", "Hygiene", 40.00, False),
+            ("Face Mask", "Hygiene", 10.00, False), ("Gloves", "Hygiene", 15.00, False),
+            ("Thermometer", "Devices", 250.00, False), ("BP Monitor", "Devices", 1500.00, False),
+            ("Oxymeter", "Devices", 800.00, False), ("Nebulizer", "Devices", 2200.00, False),
+            ("Glucometer", "Devices", 1200.00, False), ("Inhaler", "Respiratory", 450.00, False),
+            ("Eye Drops", "Eye Care", 45.00, False), ("Ear Drops", "Eye Care", 35.00, False),
+            ("Nasal Spray", "Cold", 55.00, False), ("Pain Balm", "Pain & Fever", 30.00, False),
+            ("Moisturizer", "Skin Care", 150.00, False), ("Sunscreen", "Skin Care", 250.00, False),
+            ("Aloe Vera Gel", "Skin Care", 80.00, False), ("Antispasmodic", "Pain & Fever", 25.00, False),
+            ("Oral Rehydration", "Hydration", 15.00, False), ("Whey Protein", "Nutrition", 2500.00, False)
         ]
+        
+        meds = []
+        for name, cond, price, controlled in med_names:
+            meds.append(models.Medicine(
+                name=name,
+                description=f"Standard {name} used for {cond}.",
+                condition=cond,
+                is_controlled=controlled,
+                stock=45 if controlled else 120,
+                price=price,
+                expiry_date=date(2024, 6, 1) if name in ["Paracetamol", "Aspirin"] else date(2027, 1, 1)
+            ))
         db.add_all(meds)
         db.commit()
 
@@ -111,6 +148,26 @@ def seed_db(db: Session):
 def on_startup():
     db = next(get_db())
     seed_db(db)
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: Optional[models.RoleEnum] = models.RoleEnum.staff
+
+@app.post("/register")
+async def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    new_user = models.User(
+        username=user.username,
+        hashed_password=get_password_hash(user.password),
+        role=user.role
+    )
+    db.add(new_user)
+    db.commit()
+    return {"message": "User registered successfully"}
 
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -125,7 +182,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username, "role": user.role}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "role": user.role}
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role, "username": user.username}
 
 class MedicineCreate(BaseModel):
     name: str
@@ -207,6 +264,21 @@ def get_stats(db: Session = Depends(get_db), current_user: models.User = Depends
         "low_stock_items": low_stock,
         "controlled_drug_dispensed": controlled_sales
     }
+
+@app.get("/api/dashboard/recent-sales")
+def get_recent_sales(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    sales = db.query(models.Sale).order_by(models.Sale.date.desc()).limit(5).all()
+    results = []
+    for s in sales:
+        items_count = db.query(models.SaleItem).filter(models.SaleItem.sale_id == s.id).count()
+        results.append({
+            "id": s.id,
+            "total_amount": s.total_amount,
+            "date": s.date,
+            "items_count": items_count,
+            "username": s.seller.username if s.seller else "Unknown"
+        })
+    return results
 
 @app.get("/api/ai/predict-demand")
 def predict_demand(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
